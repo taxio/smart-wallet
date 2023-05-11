@@ -13,9 +13,12 @@ describe("SmartWallet", () => {
     const Proxy = await ethers.getContractFactory("Proxy");
     const proxy = await Proxy.deploy(owner.address, smartWallet.address);
 
+    const ProxyFactory = await ethers.getContractFactory("ProxyFactory");
+    const proxyFactory = await ProxyFactory.deploy();
+
     const wallet = SmartWallet.attach(proxy.address);
 
-    return { owner, SmartWallet, smartWallet, Proxy, proxy, wallet };
+    return { owner, SmartWallet, smartWallet, Proxy, proxy, wallet, ProxyFactory, proxyFactory };
   }
 
   describe("execute", () => {
@@ -116,6 +119,42 @@ describe("SmartWallet", () => {
       })).to.emit(wallet, "Received");
 
       expect(await ethers.provider.getBalance(wallet.address)).to.equal(ethers.utils.parseEther("0.001"));
+    });
+  });
+
+  describe("deployment", () => {
+    describe("ProxyFactory", () => {
+      it("deploy", async () => {
+        const { owner, SmartWallet, smartWallet, proxyFactory } = await loadFixture(deploySmartWallet);
+
+        const salt = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("123"));
+
+        const targetAddress = await proxyFactory.getAddress(
+          smartWallet.address,
+          owner.address,
+          salt
+        );
+
+        await expect(proxyFactory.deploy(
+          smartWallet.address,
+          owner.address,
+          salt
+        )).to.emit(proxyFactory, "ProxyDeployed").withArgs(
+          targetAddress,
+          smartWallet.address,
+          owner.address,
+          salt
+        );
+
+        const wallet = SmartWallet.attach(targetAddress);
+        expect(await wallet.owner()).to.equal(owner.address);
+
+        await expect(proxyFactory.deploy(
+          smartWallet.address,
+          owner.address,
+          salt
+        )).to.be.reverted;
+      });
     });
   });
 });
