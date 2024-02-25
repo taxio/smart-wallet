@@ -24,6 +24,7 @@ contract BaseWallet is ERC1967Upgrade {
         address _fallbackImpl;
     }
 
+    // TODO: update slot
     bytes32 private constant _STORAGE_SLOT =
         0x52c63247e1f47db19d5ce0460030c497f067ca4cebf71ba98eeadabe20bace00;
 
