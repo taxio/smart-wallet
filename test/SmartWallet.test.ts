@@ -5,7 +5,7 @@ import { ethers } from "hardhat";
 describe("SmartWallet", function () {
   describe("deployment", function () {
     it("should deploy", async function () {
-      const Proxy = await ethers.getContractFactory("WalletProxy");
+      const Proxy = await ethers.getContractFactory("Proxy");
       const Verifier = await ethers.getContractFactory("Verifier");
       const Fallback = await ethers.getContractFactory("FallbackHandler");
       const BaseWallet = await ethers.getContractFactory("BaseWallet");

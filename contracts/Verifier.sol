@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/interfaces/IERC165.sol";
 import "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-import {ERC1967Upgrade} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Upgrade.sol";
 import "@openzeppelin/contracts/utils/StorageSlot.sol";
 
 import "@account-abstraction/contracts/interfaces/IAccount.sol";
@@ -30,9 +30,9 @@ contract Verifier is
         address _entryPoint;
     }
 
-    // TODO: update slot
+    // keccak256("mywallet.verifier")
     bytes32 private constant _STORAGE_SLOT =
-        0x52c63247e1f47db19d5ce0460030c497f067ca4cebf71ba98eeadabe20bace00;
+        0x3fd0b00f72d3e771f988a355d959476617daa6af07ebe6029b75d993da2a6927;
 
     function _getStorage() private pure returns (VerifierStorage storage $) {
         assembly {

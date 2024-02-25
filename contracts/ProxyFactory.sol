@@ -15,7 +15,7 @@ contract ProxyFactory {
         bytes32 salt
     ) external returns (address) {
         address proxy = address(
-            new WalletProxy{salt: salt}(owner, implementation, data)
+            new Proxy{salt: salt}(owner, implementation, data)
         );
         return proxy;
     }
@@ -31,7 +31,7 @@ contract ProxyFactory {
                 salt,
                 keccak256(
                     abi.encodePacked(
-                        type(WalletProxy).creationCode,
+                        type(Proxy).creationCode,
                         uint256(uint160(owner)),
                         uint256(uint160(implementation)),
                         data

@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import {ERC1967Upgrade} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Upgrade.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/StorageSlot.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
 import "@account-abstraction/contracts/interfaces/UserOperation.sol";
 import "@account-abstraction/contracts/core/BaseAccount.sol";
@@ -24,9 +23,9 @@ contract BaseWallet is ERC1967Upgrade {
         address _fallbackImpl;
     }
 
-    // TODO: update slot
+    // keccak256("mywallet.base")
     bytes32 private constant _STORAGE_SLOT =
-        0x52c63247e1f47db19d5ce0460030c497f067ca4cebf71ba98eeadabe20bace00;
+        0x2c4701970d09da25f7ed57ba2789825e251a0c930bb132616f4f10dfbd996367;
 
     function _getStorage() private pure returns (BaseWalletStorage storage $) {
         assembly {
