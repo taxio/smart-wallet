@@ -12,9 +12,18 @@ contract Proxy {
     // keccak256("eip1967.proxy.implementation")
     bytes32 internal constant _IMPLEMENTATION_SLOT =
         0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
+    // keccak256("mywallet.entryPoint")
+    bytes32 internal constant _ENTRY_POINT_SLOT =
+        0xb0d3409e8eb2b1bd1458a74523b1a19e7e4bb71a0a6134b2519f988dc6c11914;
 
-    constructor(address admin, address implementation, bytes memory data) {
+    constructor(
+        address admin,
+        address entryPoint,
+        address implementation,
+        bytes memory data
+    ) {
         _getAddressSlot(_ADMIN_SLOT).value = admin;
+        _getAddressSlot(_ENTRY_POINT_SLOT).value = entryPoint;
         _getAddressSlot(_IMPLEMENTATION_SLOT).value = implementation;
         if (data.length > 0) {
             (bool success, bytes memory returndata) = implementation

@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.18;
 
-import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Upgrade.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/StorageSlot.sol";
 
 import "@account-abstraction/contracts/interfaces/UserOperation.sol";
-import "@account-abstraction/contracts/core/BaseAccount.sol";
 import "@account-abstraction/contracts/interfaces/IAccount.sol";
+import "@account-abstraction/contracts/core/BaseAccount.sol";
 
 import "./ISupportsSelector.sol";
+import "./WalletMixin.sol";
 
-contract BaseWallet is ERC1967Upgrade {
+contract BaseWallet is WalletMixin {
     using ECDSA for bytes32;
     using Address for address;
 
@@ -40,8 +40,11 @@ contract BaseWallet is ERC1967Upgrade {
         $.initialized = true;
     }
 
-    modifier onlyAdmin() {
-        require(msg.sender == _getAdmin(), "BaseWallet: not admin");
+    modifier onlyOwner() {
+        require(
+            msg.sender == _getAdmin() || msg.sender == _getEntryPoint(),
+            "BaseWallet: not owner"
+        );
         _;
     }
 
@@ -71,6 +74,21 @@ contract BaseWallet is ERC1967Upgrade {
         $._fallbackImpl = fallbackImpl;
     }
 
+    function execute(
+        address target,
+        uint256 value,
+        bytes calldata data
+    ) external payable onlyOwner returns (bytes memory) {
+        // TODO: pre exec hook
+
+        (bool success, bytes memory result) = target.call{value: value}(data);
+        require(success, "BaseWallet: execution failed");
+
+        // TODO: post exec hook
+
+        return result;
+    }
+
     fallback() external payable {
         BaseWalletStorage storage $ = _getStorage();
 
@@ -78,6 +96,7 @@ contract BaseWallet is ERC1967Upgrade {
 
         // Verification
         if (ISupportsSelector($._verifyImpl).supportsSelector(selector)) {
+            // TODO: pre validation hook
             _delegate($._verifyImpl);
         }
 
