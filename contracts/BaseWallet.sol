@@ -11,8 +11,10 @@ import "@account-abstraction/contracts/core/BaseAccount.sol";
 
 import "./ISupportsSelector.sol";
 import "./WalletMixin.sol";
+import "./PluginManager.sol";
+import {Call} from "./ERC6900/IStandardExecutor.sol";
 
-contract BaseWallet is WalletMixin {
+contract BaseWallet is WalletMixin, PluginManager {
     using ECDSA for bytes32;
     using Address for address;
 
@@ -74,17 +76,82 @@ contract BaseWallet is WalletMixin {
         $._fallbackImpl = fallbackImpl;
     }
 
+    function updateVerifierImpl(
+        address newImpl,
+        bytes calldata initData
+    ) external onlySelf {
+        BaseWalletStorage storage $ = _getStorage();
+        $._verifyImpl = newImpl;
+        if (initData.length > 0) {
+            newImpl.functionDelegateCall(initData);
+        }
+    }
+
+    function updateExecutionImpl(
+        bytes4[] calldata selector,
+        address newImpl,
+        bytes calldata initData
+    ) external onlySelf {
+        BaseWalletStorage storage $ = _getStorage();
+        for (uint256 i = 0; i < selector.length; i++) {
+            $._executionImpls[selector[i]] = newImpl;
+        }
+        if (initData.length > 0) {
+            newImpl.functionDelegateCall(initData);
+        }
+    }
+
+    function updateFallbackImpl(
+        address newImpl,
+        bytes calldata initData
+    ) external onlySelf {
+        BaseWalletStorage storage $ = _getStorage();
+        $._fallbackImpl = newImpl;
+        if (initData.length > 0) {
+            newImpl.functionDelegateCall(initData);
+        }
+    }
+
     function execute(
         address target,
         uint256 value,
         bytes calldata data
     ) external payable onlyOwner returns (bytes memory) {
-        // TODO: pre exec hook
+        return _exec(target, value, data);
+    }
+
+    function executeBatch(
+        Call[] calldata calls
+    ) external payable onlyOwner returns (bytes[] memory results) {
+        uint256 callsLength = calls.length;
+        results = new bytes[](callsLength);
+
+        for (uint256 i = 0; i < callsLength; ) {
+            results[i] = _exec(calls[i].target, calls[i].value, calls[i].data);
+
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    function _exec(
+        address target,
+        uint256 value,
+        bytes calldata data
+    ) internal returns (bytes memory) {
+        // pre hook
+        _doPreExecutionHooks();
 
         (bool success, bytes memory result) = target.call{value: value}(data);
-        require(success, "BaseWallet: execution failed");
+        if (!success) {
+            assembly ("memory-safe") {
+                revert(add(result, 32), mload(result))
+            }
+        }
 
-        // TODO: post exec hook
+        // post hook
+        _doPostExecutionHooks();
 
         return result;
     }
@@ -96,7 +163,13 @@ contract BaseWallet is WalletMixin {
 
         // Verification
         if (ISupportsSelector($._verifyImpl).supportsSelector(selector)) {
-            // TODO: pre validation hook
+            // pre hook
+            if (msg.sender == _getEntryPoint()) {
+                _doUserOperationValidatinoHooks();
+            } else {
+                _doRuntimeValidationHooks();
+            }
+
             _delegate($._verifyImpl);
         }
 
