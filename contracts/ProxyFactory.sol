@@ -6,28 +6,31 @@ import "@openzeppelin/contracts/utils/Create2.sol";
 import "./Proxy.sol";
 
 contract ProxyFactory {
-    event ProxyDeployed(
-        address proxy,
-        address implementation,
-        address owner,
-        bytes32 salt
-    );
+    event Deployed(address indexed proxy);
 
     constructor() {}
 
     function deploy(
+        address admin,
+        address entryPoint,
         address implementation,
-        address owner,
+        bytes memory data,
         bytes32 salt
     ) external returns (address) {
-        address proxy = address(new Proxy{salt: salt}(owner, implementation));
-        emit ProxyDeployed(proxy, implementation, owner, salt);
+        address proxy = address(
+            new Proxy{salt: salt}(admin, entryPoint, implementation, data)
+        );
+
+        emit Deployed(proxy);
+
         return proxy;
     }
 
     function getAddress(
+        address admin,
+        address entryPoint,
         address implementation,
-        address owner,
+        bytes memory data,
         bytes32 salt
     ) external view returns (address) {
         return
@@ -36,8 +39,10 @@ contract ProxyFactory {
                 keccak256(
                     abi.encodePacked(
                         type(Proxy).creationCode,
-                        uint256(uint160(owner)),
-                        uint256(uint160(implementation))
+                        uint256(uint160(admin)),
+                        uint256(uint160(entryPoint)),
+                        uint256(uint160(implementation)),
+                        data
                     )
                 )
             );
