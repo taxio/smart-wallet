@@ -6,8 +6,6 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/StorageSlot.sol";
 
 import "@account-abstraction/contracts/interfaces/UserOperation.sol";
-import "@account-abstraction/contracts/interfaces/IAccount.sol";
-import "@account-abstraction/contracts/core/BaseAccount.sol";
 
 import "./ISupportsSelector.sol";
 import "./WalletMixin.sol";
@@ -141,7 +139,12 @@ contract BaseWallet is WalletMixin, PluginManager {
         bytes calldata data
     ) internal returns (bytes memory) {
         // pre hook
-        _doPreExecutionHooks();
+        bytes memory postHookData = _doPreExecutionHook(
+            msg.sender,
+            target,
+            value,
+            data
+        );
 
         (bool success, bytes memory result) = target.call{value: value}(data);
         if (!success) {
@@ -151,7 +154,7 @@ contract BaseWallet is WalletMixin, PluginManager {
         }
 
         // post hook
-        _doPostExecutionHooks();
+        _doPostExecutionHook(postHookData);
 
         return result;
     }
@@ -165,9 +168,14 @@ contract BaseWallet is WalletMixin, PluginManager {
         if (ISupportsSelector($._verifyImpl).supportsSelector(selector)) {
             // pre hook
             if (msg.sender == _getEntryPoint()) {
-                _doUserOperationValidatinoHooks();
+                (UserOperation memory userOp, bytes32 userOpHash, ) = abi
+                    .decode(
+                        msg.data[4:msg.data.length],
+                        (UserOperation, bytes32, uint256)
+                    );
+                _doUserOperationValidatinoHook(userOp, userOpHash);
             } else {
-                _doRuntimeValidationHooks();
+                _doRuntimeValidationHook(msg.sender, msg.value, msg.data);
             }
 
             _delegate($._verifyImpl);

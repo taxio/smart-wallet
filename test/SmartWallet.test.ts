@@ -22,7 +22,7 @@ describe("SmartWallet", function () {
       const baseWallet = await BaseWallet.deploy();
       await baseWallet.deployed();
 
-      const [owner] = await ethers.getSigners();
+      const [owner, bundler] = await ethers.getSigners();
       console.log("owner", owner.address);
 
       // const salt = ethers.utils.randomBytes(32);
@@ -39,6 +39,25 @@ describe("SmartWallet", function () {
         initCode
       );
       await proxy.deployed();
+      const proxyAddress = proxy.address;
+
+      await owner.sendTransaction({
+        to: proxy.address,
+        value: ethers.utils.parseEther("1"),
+      });
+      expect(await ethers.provider.getBalance(proxy.address)).to.equal(
+        ethers.utils.parseEther("1")
+      );
+
+      const wallet = BaseWallet.attach(proxy.address);
+
+      // call from Owner
+      await wallet.execute(owner.address, ethers.utils.parseEther("0.1"), "0x");
+      expect(await ethers.provider.getBalance(proxy.address)).to.equal(
+        ethers.utils.parseEther("0.9")
+      );
+
+      // call from EntryPoint
     });
   });
 });
