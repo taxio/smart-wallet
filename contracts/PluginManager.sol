@@ -60,31 +60,6 @@ contract PluginManager {
         emit PluginUninstalled(plugin);
     }
 
-    function _doRuntimeValidationHook(
-        address caller,
-        uint256 sendValue,
-        bytes calldata senData
-    ) internal {
-        PluginManagerStorage storage $ = _getPluginManagerStorage();
-        if ($.plugin != address(0)) {
-            IPlugin($.plugin).preRuntimeValidationHook(
-                caller,
-                sendValue,
-                senData
-            );
-        }
-    }
-
-    function _doUserOperationValidatinoHook(
-        UserOperation memory userOp,
-        bytes32 userOpHash
-    ) internal {
-        PluginManagerStorage storage $ = _getPluginManagerStorage();
-        if ($.plugin != address(0)) {
-            IPlugin($.plugin).preUserOpValidationHook(userOp, userOpHash);
-        }
-    }
-
     function _doPreExecutionHook(
         address caller,
         address target,
