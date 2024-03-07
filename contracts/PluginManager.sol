@@ -61,13 +61,17 @@ contract PluginManager {
     }
 
     function _doRuntimeValidationHook(
-        address sender,
-        uint256 value,
-        bytes calldata data
+        address caller,
+        uint256 sendValue,
+        bytes calldata senData
     ) internal {
         PluginManagerStorage storage $ = _getPluginManagerStorage();
         if ($.plugin != address(0)) {
-            IPlugin($.plugin).preRuntimeValidationHook(sender, value, data);
+            IPlugin($.plugin).preRuntimeValidationHook(
+                caller,
+                sendValue,
+                senData
+            );
         }
     }
 
@@ -82,10 +86,10 @@ contract PluginManager {
     }
 
     function _doPreExecutionHook(
-        address sender,
+        address caller,
         address target,
-        uint256 value,
-        bytes calldata data
+        uint256 sendValue,
+        bytes calldata sendData
     ) internal returns (bytes memory postHookData) {
         PluginManagerStorage storage $ = _getPluginManagerStorage();
         if ($.plugin == address(0)) {
@@ -93,10 +97,10 @@ contract PluginManager {
         }
 
         postHookData = IPlugin($.plugin).preExecutionHook(
-            sender,
+            caller,
             target,
-            value,
-            data
+            sendValue,
+            sendData
         );
     }
 

@@ -14,16 +14,16 @@ interface IPlugin {
     ) external returns (uint256);
 
     function preRuntimeValidationHook(
-        address sender,
-        uint256 value,
-        bytes calldata data
+        address caller,
+        uint256 sendValue,
+        bytes calldata sendData
     ) external;
 
     function preExecutionHook(
-        address sender,
+        address caller,
         address target,
-        uint256 value,
-        bytes calldata data
+        uint256 sendValue,
+        bytes calldata sendData
     ) external returns (bytes memory);
 
     function postExecutionHook(bytes calldata preExecHookData) external;
