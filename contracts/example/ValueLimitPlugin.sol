@@ -20,17 +20,6 @@ contract ValueLimitPlugin is IPlugin {
         delete _limits[msg.sender];
     }
 
-    function preUserOpValidationHook(
-        UserOperation memory userOp,
-        bytes32 userOpHash
-    ) external returns (uint256) {}
-
-    function preRuntimeValidationHook(
-        address, // caller
-        uint256, // sendValue
-        bytes calldata // sendDat
-    ) external {}
-
     function preExecutionHook(
         address, // caller
         address, // target
