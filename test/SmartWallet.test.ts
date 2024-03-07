@@ -23,7 +23,6 @@ describe("SmartWallet", function () {
       await baseWallet.deployed();
 
       const [owner, bundler] = await ethers.getSigners();
-      console.log("owner", owner.address);
 
       // const salt = ethers.utils.randomBytes(32);
       const initCode = BaseWallet.interface.encodeFunctionData("initialize", [
@@ -39,7 +38,6 @@ describe("SmartWallet", function () {
         initCode
       );
       await proxy.deployed();
-      const proxyAddress = proxy.address;
 
       await owner.sendTransaction({
         to: proxy.address,

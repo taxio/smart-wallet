@@ -5,6 +5,7 @@ import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/StorageSlot.sol";
 
+import "@account-abstraction/contracts/interfaces/IAccount.sol";
 import "@account-abstraction/contracts/interfaces/UserOperation.sol";
 
 import "./ISupportsSelector.sol";
@@ -167,7 +168,10 @@ contract BaseWallet is WalletMixin, PluginManager {
         // Verification
         if (ISupportsSelector($._verifyImpl).supportsSelector(selector)) {
             // pre hook
-            if (msg.sender == _getEntryPoint()) {
+            if (
+                msg.sender == _getEntryPoint() &&
+                selector == IAccount.validateUserOp.selector
+            ) {
                 (UserOperation memory userOp, bytes32 userOpHash, ) = abi
                     .decode(
                         msg.data[4:msg.data.length],
