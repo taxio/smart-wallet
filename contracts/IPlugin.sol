@@ -8,17 +8,6 @@ interface IPlugin {
 
     function onUninstall(bytes calldata data) external;
 
-    function preUserOpValidationHook(
-        UserOperation memory userOp,
-        bytes32 userOpHash
-    ) external returns (uint256);
-
-    function preRuntimeValidationHook(
-        address caller,
-        uint256 sendValue,
-        bytes calldata sendData
-    ) external;
-
     function preExecutionHook(
         address caller,
         address target,

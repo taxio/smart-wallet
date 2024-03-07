@@ -167,26 +167,11 @@ contract BaseWallet is WalletMixin, PluginManager {
 
         // Verification
         if (ISupportsSelector($._verifyImpl).supportsSelector(selector)) {
-            // pre hook
-            if (
-                msg.sender == _getEntryPoint() &&
-                selector == IAccount.validateUserOp.selector
-            ) {
-                (UserOperation memory userOp, bytes32 userOpHash, ) = abi
-                    .decode(
-                        msg.data[4:msg.data.length],
-                        (UserOperation, bytes32, uint256)
-                    );
-                _doUserOperationValidatinoHook(userOp, userOpHash);
-            } else {
-                _doRuntimeValidationHook(msg.sender, msg.value, msg.data);
-            }
-
             _delegate($._verifyImpl);
         }
 
         // Execution
-        address execHandler = $._executionImpls[msg.sig];
+        address execHandler = $._executionImpls[selector];
         if (execHandler != address(0)) {
             _delegate(execHandler);
         }
